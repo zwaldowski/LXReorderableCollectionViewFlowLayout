@@ -43,13 +43,13 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
 }
 @end
 
-@interface UICollectionViewCell (LXReorderableCollectionViewFlowLayout)
+@interface PSUICollectionViewCell (LXReorderableCollectionViewFlowLayout)
 
 - (UIImage *)LX_rasterizedImage;
 
 @end
 
-@implementation UICollectionViewCell (LXReorderableCollectionViewFlowLayout)
+@implementation PSUICollectionViewCell (LXReorderableCollectionViewFlowLayout)
 
 - (UIImage *)LX_rasterizedImage {
     UIGraphicsBeginImageContextWithOptions(self.bounds.size, self.isOpaque, 0.0f);
@@ -128,7 +128,7 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
     [self removeObserver:self forKeyPath:kLXCollectionViewKeyPath];
 }
 
-- (void)applyLayoutAttributes:(UICollectionViewLayoutAttributes *)layoutAttributes {
+- (void)applyLayoutAttributes:(PSUICollectionViewLayoutAttributes *)layoutAttributes {
     if ([layoutAttributes.indexPath isEqual:self.selectedItemIndexPath]) {
         layoutAttributes.hidden = YES;
     }
@@ -151,14 +151,14 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
     }
     
     if ([self.dataSource respondsToSelector:@selector(collectionView:itemAtIndexPath:canMoveToIndexPath:)] &&
-        ![self.dataSource collectionView:self.collectionView itemAtIndexPath:previousIndexPath canMoveToIndexPath:newIndexPath]) {
+        ![self.dataSource collectionView:(PSUICollectionView*)self.collectionView itemAtIndexPath:previousIndexPath canMoveToIndexPath:newIndexPath]) {
         return;
     }
     
     self.selectedItemIndexPath = newIndexPath;
     
     if ([self.dataSource respondsToSelector:@selector(collectionView:itemAtIndexPath:willMoveToIndexPath:)]) {
-        [self.dataSource collectionView:self.collectionView itemAtIndexPath:previousIndexPath willMoveToIndexPath:newIndexPath];
+        [self.dataSource collectionView:(PSUICollectionView*)self.collectionView itemAtIndexPath:previousIndexPath willMoveToIndexPath:newIndexPath];
     }
 
     __weak typeof(self) weakSelf = self;
@@ -171,7 +171,7 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
     } completion:^(BOOL finished) {
         __strong typeof(self) strongSelf = weakSelf;
         if ([strongSelf.dataSource respondsToSelector:@selector(collectionView:itemAtIndexPath:didMoveToIndexPath:)]) {
-            [strongSelf.dataSource collectionView:strongSelf.collectionView itemAtIndexPath:previousIndexPath didMoveToIndexPath:newIndexPath];
+            [strongSelf.dataSource collectionView:(PSUICollectionView*)strongSelf.collectionView itemAtIndexPath:previousIndexPath didMoveToIndexPath:newIndexPath];
         }
     }];
 }
@@ -271,17 +271,17 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
             NSIndexPath *currentIndexPath = [self.collectionView indexPathForItemAtPoint:[gestureRecognizer locationInView:self.collectionView]];
             
             if ([self.dataSource respondsToSelector:@selector(collectionView:canMoveItemAtIndexPath:)] &&
-               ![self.dataSource collectionView:self.collectionView canMoveItemAtIndexPath:currentIndexPath]) {
+               ![self.dataSource collectionView:(PSUICollectionView*)self.collectionView canMoveItemAtIndexPath:currentIndexPath]) {
                 return;
             }
             
             self.selectedItemIndexPath = currentIndexPath;
             
             if ([self.delegate respondsToSelector:@selector(collectionView:layout:willBeginDraggingItemAtIndexPath:)]) {
-                [self.delegate collectionView:self.collectionView layout:self willBeginDraggingItemAtIndexPath:self.selectedItemIndexPath];
+                [self.delegate collectionView:(PSUICollectionView*)self.collectionView layout:(PSUICollectionViewLayout*)self willBeginDraggingItemAtIndexPath:self.selectedItemIndexPath];
             }
             
-            UICollectionViewCell *collectionViewCell = [self.collectionView cellForItemAtIndexPath:self.selectedItemIndexPath];
+            PSUICollectionViewCell *collectionViewCell = (PSUICollectionViewCell*)[(PSUICollectionView*)self.collectionView cellForItemAtIndexPath:self.selectedItemIndexPath];
             
             self.currentView = [[UIView alloc] initWithFrame:collectionViewCell.frame];
             
@@ -320,7 +320,7 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
                      [highlightedImageView removeFromSuperview];
                      
                      if ([strongSelf.delegate respondsToSelector:@selector(collectionView:layout:didBeginDraggingItemAtIndexPath:)]) {
-                         [strongSelf.delegate collectionView:strongSelf.collectionView layout:strongSelf didBeginDraggingItemAtIndexPath:strongSelf.selectedItemIndexPath];
+                         [strongSelf.delegate collectionView:(PSUICollectionView*)strongSelf.collectionView layout:(PSUICollectionViewLayout*)strongSelf didBeginDraggingItemAtIndexPath:strongSelf.selectedItemIndexPath];
                      }
                  }
              }];
@@ -333,13 +333,13 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
             
             if (currentIndexPath) {
                 if ([self.delegate respondsToSelector:@selector(collectionView:layout:willEndDraggingItemAtIndexPath:)]) {
-                    [self.delegate collectionView:self.collectionView layout:self willEndDraggingItemAtIndexPath:currentIndexPath];
+                    [self.delegate collectionView:(PSUICollectionView*)self.collectionView layout:(PSUICollectionViewLayout*)self willEndDraggingItemAtIndexPath:currentIndexPath];
                 }
                 
                 self.selectedItemIndexPath = nil;
                 self.currentViewCenter = CGPointZero;
                 
-                UICollectionViewLayoutAttributes *layoutAttributes = [self layoutAttributesForItemAtIndexPath:currentIndexPath];
+                PSUICollectionViewLayoutAttributes *layoutAttributes = (PSUICollectionViewLayoutAttributes*)[self layoutAttributesForItemAtIndexPath:currentIndexPath];
                 
                 __weak typeof(self) weakSelf = self;
                 [UIView
@@ -361,7 +361,7 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
                          [strongSelf invalidateLayout];
                          
                          if ([strongSelf.delegate respondsToSelector:@selector(collectionView:layout:didEndDraggingItemAtIndexPath:)]) {
-                             [strongSelf.delegate collectionView:strongSelf.collectionView layout:strongSelf didEndDraggingItemAtIndexPath:currentIndexPath];
+                             [strongSelf.delegate collectionView:(PSUICollectionView*)strongSelf.collectionView layout:(PSUICollectionViewLayout*)strongSelf didEndDraggingItemAtIndexPath:currentIndexPath];
                          }
                      }
                  }];
@@ -416,12 +416,12 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
     }
 }
 
-#pragma mark - UICollectionViewLayout overridden methods
+#pragma mark - PSUICollectionViewLayout overridden methods
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
     NSArray *layoutAttributesForElementsInRect = [super layoutAttributesForElementsInRect:rect];
     
-    for (UICollectionViewLayoutAttributes *layoutAttributes in layoutAttributesForElementsInRect) {
+    for (PSUICollectionViewLayoutAttributes *layoutAttributes in layoutAttributesForElementsInRect) {
         switch (layoutAttributes.representedElementCategory) {
             case UICollectionElementCategoryCell: {
                 [self applyLayoutAttributes:layoutAttributes];
@@ -435,8 +435,8 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
     return layoutAttributesForElementsInRect;
 }
 
-- (UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UICollectionViewLayoutAttributes *layoutAttributes = [super layoutAttributesForItemAtIndexPath:indexPath];
+- (PSUICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath {
+    PSUICollectionViewLayoutAttributes *layoutAttributes = (PSUICollectionViewLayoutAttributes*)[super layoutAttributesForItemAtIndexPath:indexPath];
     
     switch (layoutAttributes.representedElementCategory) {
         case UICollectionElementCategoryCell: {
